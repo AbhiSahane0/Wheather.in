@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Dashboard</title>
+    <!-- Favicon -->
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#3b82f6" />
+    <!-- Dark mode script - placed at the top to avoid FOUC (Flash of Unstyled Content) -->
+    <script>
+      // Check for saved theme preference or use system preference
+      if (
+        localStorage.getItem("theme") === "dark" ||
+        (!localStorage.getItem("theme") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+    <link rel="stylesheet" href="output.css" />
+    <!-- Add Google fonts for better typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        font-family: "Inter", sans-serif;
+      }
+      .weather-gradient {
+        background: linear-gradient(to right, #5b86e5, #36d1dc);
+      }
+      .dark .weather-gradient {
+        background: linear-gradient(to right, #304352, #0f2027);
+      }
+      .glass-effect {
+        backdrop-filter: blur(10px);
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      .dark .glass-effect {
+        background-color: rgba(17, 24, 39, 0.6);
+      }
+      @keyframes float {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+      .floating {
+        animation: float 6s ease-in-out infinite;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen transition-colors duration-300"
+  >
+    <!-- Background pattern -->
+    <div class="fixed inset-0 opacity-10 dark:opacity-5 -z-10 overflow-hidden">
+      <div class="absolute w-full h-full">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 320"
+          class="absolute top-0"
+        >
+          <path
+            fill="#0099ff"
+            fill-opacity="0.1"
+            d="M0,192L48,176C96,160,192,128,288,133.3C384,139,480,181,576,165.3C672,149,768,75,864,58.7C960,43,1056,85,1152,90.7C1248,96,1344,64,1392,48L1440,32L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
+          ></path>
+        </svg>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 320"
+          class="absolute bottom-0"
+        >
+          <path
+            fill="#0099ff"
+            fill-opacity="0.1"
+            d="M0,160L48,133.3C96,107,192,53,288,74.7C384,96,480,192,576,192C672,192,768,96,864,64C960,32,1056,64,1152,96C1248,128,1344,160,1392,176L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+          ></path>
+        </svg>
+      </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 relative z-10">
+      <!-- Header with enhanced styling -->
+      <header
+        class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4"
+      >
+        <div class="flex items-center">
+          <!-- Weather Logo -->
+          <div class="mr-4 p-3 rounded-full bg-blue-500 text-white">
+            <svg
+              class="w-8 h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+              ></path>
+            </svg>
+          </div>
+          <h1 class="text-4xl font-bold text-gray-800 dark:text-white">
+            Weather
+            <span class="text-blue-500 dark:text-blue-400">Dashboard</span>
+          </h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <!-- Theme info text -->
+          <span id="themeText" class="text-sm text-gray-600 dark:text-gray-300"
+            >Light Mode</span
+          >
+          <!-- Enhanced theme toggle button -->
+          <button
+            id="themeToggle"
+            aria-label="Toggle dark mode"
+            class="p-3 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <!-- Sun icon for dark mode -->
+            <svg
+              class="w-6 h-6 text-yellow-500 hidden dark:block"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              ></path>
+            </svg>
+            <!-- Moon icon for light mode -->
+            <svg
+              class="w-6 h-6 text-blue-700 block dark:hidden"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              ></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Search Bar with Recent Searches Dropdown and Current Location Button -->
+      <div class="mb-10">
+        <div class="flex flex-col md:flex-row gap-3">
+          <div class="relative flex-grow">
+            <div
+              class="absolute inset-y-0 left-3 flex items-center pointer-events-none"
+            >
+              <svg
+                class="w-5 h-5 text-gray-400 dark:text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+            </div>
+            <input
+              type="text"
+              id="locationSearch"
+              placeholder="Search for a city..."
+              class="w-full pl-10 pr-10 py-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all duration-300 shadow-sm"
+            />
+            <button
+              id="searchButton"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors duration-300"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+            </button>
+
+            <!-- Recent Searches Dropdown with improved styling -->
+            <div
+              id="recentSearches"
+              class="absolute w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-10 hidden max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700"
+            >
+              <!-- Dropdown items will be added dynamically -->
+            </div>
+          </div>
+
+          <!-- Current Location Button with improved styling -->
+          <button
+            id="currentLocationBtn"
+            class="px-6 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg"
+          >
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              ></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              ></path>
+            </svg>
+            Current Location
+          </button>
+        </div>
+      </div>
+
+      <!-- Current Weather with improved card design -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 overflow-hidden relative"
+        >
+          <!-- Background pattern for current weather card -->
+          <div class="absolute top-0 right-0 opacity-10 dark:opacity-5">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="150"
+              height="150"
+              viewBox="0 0 24 24"
+              class="text-blue-500 dark:text-blue-400"
+              fill="currentColor"
+            >
+              <path
+                d="M4.069 13h-4.069v-2h4.069c-.041.328-.069.661-.069 1s.028.672.069 1zm3.034-7.312l-2.881-2.881-1.414 1.414 2.881 2.881c.411-.529.885-1.003 1.414-1.414zm11.209 1.414l2.881-2.881-1.414-1.414-2.881 2.881c.528.411 1.002.886 1.414 1.414zm-6.312-3.102c.339 0 .672.028 1 .069v-4.069h-2v4.069c.328-.041.661-.069 1-.069zm0 16c-.339 0-.672-.028-1-.069v4.069h2v-4.069c-.328.041-.661.069-1 .069zm7.931-9c.041.328.069.661.069 1s-.028.672-.069 1h4.069v-2h-4.069zm-3.033 7.312l2.88 2.88 1.415-1.414-2.88-2.88c-.412.528-.886 1.002-1.415 1.414zm-11.21-1.415l-2.88 2.88 1.414 1.414 2.88-2.88c-.528-.411-1.003-.885-1.414-1.414zm6.312-10.897c-3.314 0-6 2.686-6 6s2.686 6 6 6c3.313 0 6-2.686 6-6s-2.687-6-6-6z"
+              />
+            </svg>
+          </div>
+
+          <h2
+            class="text-2xl font-semibold mb-6 text-gray-800 dark:text-white flex items-center"
+          >
+            <svg
+              class="w-6 h-6 mr-2 text-blue-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+              ></path>
+            </svg>
+            Current Weather
+          </h2>
+          <div class="flex items-center justify-between">
+            <div class="z-10">
+              <p
+                class="text-6xl font-bold text-gray-800 dark:text-white mb-2 flex items-end"
+              >
+                <span id="currentTempValue" class="text-5xl font-bold"
+                  >--°C</span
+                >
+                <span class="text-lg text-gray-500 dark:text-gray-400 ml-2 mb-1"
+                  >feels like <span id="feelsLikeInline">--°C</span></span
+                >
+              </p>
+              <p
+                class="text-xl text-gray-600 dark:text-gray-300 flex items-center"
+              >
+                <svg
+                  class="w-5 h-5 mr-1 text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  ></path>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  ></path>
+                </svg>
+                <span id="currentLocationName">--</span>
+              </p>
+              <p
+                id="weatherDescription"
+                class="text-md text-gray-500 dark:text-gray-400 mt-1 capitalize"
+              >
+                --
+              </p>
+            </div>
+            <div class="w-32 h-32 floating">
+              <!-- Weather Icon will be inserted here -->
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
+        >
+          <h2
+            class="text-2xl font-semibold mb-6 text-gray-800 dark:text-white flex items-center"
+          >
+            <svg
+              class="w-6 h-6 mr-2 text-blue-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            Weather Details
+          </h2>
+          <div class="grid grid-cols-2 gap-6">
+            <div
+              class="bg-blue-50 dark:bg-gray-700 p-4 rounded-xl flex items-center"
+            >
+              <div class="p-3 rounded-lg bg-blue-100 dark:bg-gray-600 mr-3">
+                <svg
+                  class="w-6 h-6 text-blue-500 dark:text-blue-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                  ></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Humidity</p>
+                <p class="text-xl font-semibold text-gray-800 dark:text-white">
+                  --%
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-blue-50 dark:bg-gray-700 p-4 rounded-xl flex items-center"
+            >
+              <div class="p-3 rounded-lg bg-blue-100 dark:bg-gray-600 mr-3">
+                <svg
+                  class="w-6 h-6 text-blue-500 dark:text-blue-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  ></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Wind Speed
+                </p>
+                <p class="text-xl font-semibold text-gray-800 dark:text-white">
+                  -- km/h
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-blue-50 dark:bg-gray-700 p-4 rounded-xl flex items-center"
+            >
+              <div class="p-3 rounded-lg bg-blue-100 dark:bg-gray-600 mr-3">
+                <svg
+                  class="w-6 h-6 text-blue-500 dark:text-blue-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  ></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Pressure</p>
+                <p class="text-xl font-semibold text-gray-800 dark:text-white">
+                  -- hPa
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-blue-50 dark:bg-gray-700 p-4 rounded-xl flex items-center"
+            >
+              <div class="p-3 rounded-lg bg-blue-100 dark:bg-gray-600 mr-3">
+                <svg
+                  class="w-6 h-6 text-blue-500 dark:text-blue-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  ></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Feels Like
+                </p>
+                <p class="text-xl font-semibold text-gray-800 dark:text-white">
+                  --°C
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-Day Forecast with improved styling -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
+      >
+        <h2
+          class="text-2xl font-semibold mb-6 text-gray-800 dark:text-white flex items-center"
+        >
+          <svg
+            class="w-6 h-6 mr-2 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            ></path>
+          </svg>
+          5-Day Forecast
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <!-- Forecast cards will be dynamically added here -->
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="mt-12 text-center text-gray-500 dark:text-gray-400 pb-8">
+        <p>
+          Weather data provided by
+          <a
+            href="https://openweathermap.org/"
+            class="text-blue-500 hover:underline"
+            target="_blank"
+            >OpenWeatherMap</a
+          >
+          | Build by Abhijit Sahane.
+        </p>
+      </footer>
+    </div>
+
+    <script src="index.js"></script>
+  </body>
+</html>
