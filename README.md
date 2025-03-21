@@ -2,6 +2,7 @@
 
 A modern, responsive weather application built with HTML, CSS (Tailwind), and vanilla JavaScript. Get real-time weather information and forecasts for any city or your current location.
 
+See the application Live 😎
 
 ## Features
 
@@ -54,12 +55,17 @@ A modern, responsive weather application built with HTML, CSS (Tailwind), and va
      ```
 
 4. Build the CSS:
+
    ```
-   npm run build:css
+   npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
+
    ```
+
 5. Run the application:
+
    ```
-   npm start
+   Use live server
+
    ```
 
 ## Usage Guide
